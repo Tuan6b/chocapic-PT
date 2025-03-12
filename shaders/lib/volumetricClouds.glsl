@@ -1,101 +1,147 @@
-#define VOLUMETRIC_CLOUDS
+#define VOLUMETRIC_CLOUDS // Enables volumetric cloud rendering
 
+// Cloud detail level settings
 #define cloud_LevelOfDetail 2		// Number of fbm noise iterations for on-screen clouds (-1 is no fbm)	[-1 0 1 2 3 4 5 6 7 8]
 #define cloud_ShadowLevelOfDetail -1	// Number of fbm noise iterations for the shadowing of on-screen clouds (-1 is no fbm)	[-1 0 1 2 3 4 5 6 7 8]
 #define cloud_LevelOfDetailLQ 0	// Number of fbm noise iterations for reflected clouds (-1 is no fbm)	[-1 0 1 2 3 4 5 6 7 8]
 #define cloud_ShadowLevelOfDetailLQ -1	// Number of fbm noise iterations for the shadowing of reflected clouds (-1 is no fbm)	[-1 0 1 2 3 4 5 6 7 8]
+
+// Cloud raymarching settings - higher values give better quality but lower performance
 #define minRayMarchSteps 40		// Number of ray march steps towards zenith for on-screen clouds	[20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200]
 #define maxRayMarchSteps 80		// Number of ray march steps towards horizon for on-screen clouds	[20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200]
 #define minRayMarchStepsLQ 10	// Number of ray march steps towards zenith for reflected clouds	[5  10  15  20  25  30  35  40  45  50  55  60  65  70  75  80  85  90 95 100]
 #define maxRayMarchStepsLQ 30		// Number of ray march steps towards horizon for reflected clouds	[  5  10  15  20  25  30  35  40  45  50  55  60  65  70  75  80  85  90 95 100]
+
+// Cloud light scattering parameters
 #define cloudMieG 0.55 // Values close to 1 will create a strong peak of luminance around the sun and weak elsewhere, values close to 0 means uniform fog. [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 ]
 #define cloudMieG2 0.2 // Multiple scattering approximation. Values close to 1 will create a strong peak of luminance around the sun and weak elsewhere, values close to 0 means uniform fog. [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 ]
 #define cloudMie2Multiplier 0.7 // Multiplier for multiple scattering approximation  [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 ]
 
+// Cloud altitude parameters
+float cloud_height = 1500.; // Base height of cloud layer in blocks
+float maxHeight = 3200.; // Maximum height of cloud layer in blocks
 
-float cloud_height = 1500.;
-float maxHeight = 3200.;
+// Adjust ray marching steps based on quality setting
 #ifdef HQ_CLOUDS
-int maxIT_clouds = minRayMarchSteps;
-int maxIT = maxRayMarchSteps;
+int maxIT_clouds = minRayMarchSteps; // High quality cloud steps for zenith direction
+int maxIT = maxRayMarchSteps; // High quality cloud steps for horizon direction
 #else
-int maxIT_clouds = minRayMarchStepsLQ;
-int maxIT = maxRayMarchStepsLQ;
+int maxIT_clouds = minRayMarchStepsLQ; // Low quality cloud steps for zenith direction
+int maxIT = maxRayMarchStepsLQ; // Low quality cloud steps for horizon direction
 #endif
+
+// Cloud appearance parameters
 #define cloudDensity 0.0199		// Cloud Density, 0.02-0.04 is around irl values	[0.0010 0.0011 0.0013 0.0015 0.0017 0.0020 0.0023 0.0026 0.0030 0.0034 0.0039 0.0045 0.0051 0.0058 0.0067 0.0077 0.0088 0.0101 0.0115 0.0132 0.0151 0.0173 0.0199 0.0228 0.0261 0.0299 0.0342 0.0392 0.0449 0.0514 0.0589 0.0675 0.0773 0.0885 0.1014 0.1162 0.1331 0.1524 0.1746 0.2000]
 #define cloudCoverage -0.24			// Cloud coverage	[-1.00 -0.98 -0.96 -0.94 -0.92 -0.90 -0.88 -0.86 -0.84 -0.82 -0.80 -0.78 -0.76 -0.74 -0.72 -0.70 -0.68 -0.66 -0.64 -0.62 -0.60 -0.58 -0.56 -0.54 -0.52 -0.50 -0.48 -0.46 -0.44 -0.42 -0.40 -0.38 -0.36 -0.34 -0.32 -0.30 -0.28 -0.26 -0.24 -0.22 -0.20 -0.18 -0.16 -0.14 -0.12 -0.10 -0.08 -0.06 -0.04 -0.02 0.00 0.02 0.04 0.06 0.08 0.10 0.12 0.14 0.16 0.18 0.20 0.22 0.24 0.26 0.28 0.30 0.32 0.34 0.36 0.38 0.40 0.42 0.44 0.46 0.48 0.50 0.52 0.54 0.56 0.58 0.60 0.62 0.64 0.66 0.68 0.70 0.72 0.74 0.76 0.78 0.80 0.82 0.84 0.86 0.88 0.90 0.92 0.94 0.96 0.98 1.00]
 #define fbmAmount 1.00 		// Amount of noise added to the cloud shape	[0.00 0.02 0.04 0.06 0.08 0.10 0.12 0.14 0.16 0.18 0.20 0.22 0.24 0.26 0.28 0.30 0.32 0.34 0.36 0.38 0.40 0.42 0.44 0.46 0.48 0.50 0.52 0.54 0.56 0.58 0.60 0.62 0.64 0.66 0.68 0.70 0.72 0.74 0.76 0.78 0.80 0.82 0.84 0.86 0.88 0.90 0.92 0.94 0.96 0.98 1.00 1.02 1.04 1.06 1.08 1.10 1.12 1.14 1.16 1.18 1.20 1.22 1.24 1.26 1.28 1.30 1.32 1.34 1.36 1.38 1.40 1.42 1.44 1.46 1.48 1.50 1.52 1.54 1.56 1.58 1.60 1.62 1.64 1.66 1.68 1.70 1.72 1.74 1.76 1.78 1.80 1.82 1.84 1.86 1.88 1.90 1.92 1.94 1.96 1.98 2.00 2.02 2.04 2.06 2.08 2.10 2.12 2.14 2.16 2.18 2.20 2.22 2.24 2.26 2.28 2.30 2.32 2.34 2.36 2.38 2.40 2.42 2.44 2.46 2.48 2.50 2.52 2.54 2.56 2.58 2.60 2.62 2.64 2.66 2.68 2.70 2.72 2.74 2.76 2.78 2.80 2.82 2.84 2.86 2.88 2.90 2.92 2.94 2.96 2.98 3.00]
 #define fbmPower1 2.70	// Higher values increases high frequency details of the cloud shape	[1.50 1.52 1.54 1.56 1.58 1.60 1.62 1.64 1.66 1.68 1.70 1.72 1.74 1.76 1.78 1.80 1.82 1.84 1.86 1.88 1.90 1.92 1.94 1.96 1.98 2.00 2.02 2.04 2.06 2.08 2.10 2.12 2.14 2.16 2.18 2.20 2.22 2.24 2.26 2.28 2.30 2.32 2.34 2.36 2.38 2.40 2.42 2.44 2.46 2.48 2.50 2.52 2.54 2.56 2.58 2.60 2.62 2.64 2.66 2.68 2.70 2.72 2.74 2.76 2.78 2.80 2.82 2.84 2.86 2.88 2.90 2.92 2.94 2.96 2.98 3.00 3.02 3.04 3.06 3.08 3.10 3.12 3.14 3.16 3.18 3.20 3.22 3.24 3.26 3.28 3.30 3.32 3.34 3.36 3.38 3.40 3.42 3.44 3.46 3.48 3.50 3.52 3.54 3.56 3.58 3.60 3.62 3.64 3.66 3.68 3.70 3.72 3.74 3.76 3.78 3.80 3.82 3.84 3.86 3.88 3.90 3.92 3.94 3.96 3.98 4.00]
 #define fbmPower2 2.00	// Lower values increases high frequency details of the cloud shape	[1.50 1.52 1.54 1.56 1.58 1.60 1.62 1.64 1.66 1.68 1.70 1.72 1.74 1.76 1.78 1.80 1.82 1.84 1.86 1.88 1.90 1.92 1.94 1.96 1.98 2.00 2.02 2.04 2.06 2.08 2.10 2.12 2.14 2.16 2.18 2.20 2.22 2.24 2.26 2.28 2.30 2.32 2.34 2.36 2.38 2.40 2.42 2.44 2.46 2.48 2.50 2.52 2.54 2.56 2.58 2.60 2.62 2.64 2.66 2.68 2.70 2.72 2.74 2.76 2.78 2.80 2.82 2.84 2.86 2.88 2.90 2.92 2.94 2.96 2.98 3.00 3.02 3.04 3.06 3.08 3.10 3.12 3.14 3.16 3.18 3.20 3.22 3.24 3.26 3.28 3.30 3.32 3.34 3.36 3.38 3.40 3.42 3.44 3.46 3.48 3.50 3.52 3.54 3.56 3.58 3.60 3.62 3.64 3.66 3.68 3.70 3.72 3.74 3.76 3.78 3.80 3.82 3.84 3.86 3.88 3.90 3.92 3.94 3.96 3.98 4.00]
 
-
+// Set up level of detail (LOD) based on quality settings
 #ifdef HQ_CLOUDS
-const int cloudLoD = cloud_LevelOfDetail;
-const int cloudShadowLoD = cloud_ShadowLevelOfDetail;
+const int cloudLoD = cloud_LevelOfDetail; // Use high quality LOD
+const int cloudShadowLoD = cloud_ShadowLevelOfDetail; // Use high quality shadow LOD
 #else
-const int cloudLoD = cloud_LevelOfDetailLQ;
-const int cloudShadowLoD = cloud_ShadowLevelOfDetailLQ;
+const int cloudLoD = cloud_LevelOfDetailLQ; // Use low quality LOD
+const int cloudShadowLoD = cloud_ShadowLevelOfDetailLQ; // Use low quality shadow LOD
 #endif
+
+// Bilinear texture filtering with custom smoothing function
 vec4 smoothfilter(in sampler2D tex, in vec2 uv)
 {
-	uv = uv*512.0 + 0.5;
-	vec2 iuv = floor( uv );
-	vec2 fuv = fract( uv );
+	uv = uv*512.0 + 0.5; // Scale and offset for smooth interpolation
+	vec2 iuv = floor( uv ); // Integer coordinate
+	vec2 fuv = fract( uv ); // Fractional part
+	
+	// Apply smoothstep-like interpolation for better quality
 	uv = iuv + (fuv*fuv)*(3.0-2.0*fuv);
-	uv = uv/512.0 - 0.5/512.0;
-	return texture2D( tex, uv);
+	uv = uv/512.0 - 0.5/512.0; // Rescale to texture coordinates
+	
+	return texture2D( tex, uv); // Sample with custom filtering
 }
-//3D noise from 2d texture
+
+// Function to sample 3D noise from a 2D noise texture
+// This technique is used to avoid expensive 3D texture lookups
 float densityAtPos(in vec3 pos)
 {
-
+	// Scale the position for proper noise frequency
 	pos /= 18.;
 	pos.xz *= 0.5;
 
-
+	// Split into integer and fractional parts for trilinear interpolation
 	vec3 p = floor(pos);
 	vec3 f = fract(pos);
 
+	// Improved smoothstep for better interpolation
 	f = (f*f) * (3.-2.*f);
 
+	// Calculate UV coordinates with offset for 3D impression
 	vec2 uv =  p.xz + f.xz + p.y * vec2(0.0,193.0);
-
 	vec2 coord =  uv / 512.0;
+	
 	//The y channel has an offset to avoid using two textures fetches
 	vec2 xy = texture2D(noisetex, coord).yx;
 
+	// Interpolate between the two channels based on y-coordinate
 	return mix(xy.r,xy.g, f.y);
 }
 
-
-//Cloud without 3D noise, is used to exit early lighting calculations if there is no cloud
+// Function to determine basic cloud coverage without detailed noise
+// Used as first pass to skip detailed calculations if no cloud exists
 float cloudCov(in vec3 pos,vec3 samplePos){
-	float mult = max(pos.y-2000.0,0.0)/2000.0;
-	float mult2 = max(-pos.y+2000.0,0.0)/500.0;
+	// Height-based attenuation for cloud top and bottom
+	float mult = max(pos.y-2000.0,0.0)/2000.0; // Top fade out
+	float mult2 = max(-pos.y+2000.0,0.0)/500.0; // Bottom fade out
+	
+	// Calculate base coverage with rain influence
 	float coverage = max((texture2D(noisetex,(samplePos.xz+sin(dot(samplePos.xz, vec2(0.5))/1000.)*600)/15000.).r+0.9*rainStrength+0.1)/(1.1+0.9*rainStrength) + cloudCoverage/2.5,0.0);
+	
+	// Shape the cloud mass with height-based attenuation
 	float cloud = coverage*coverage*4.0 - mult*mult*mult*5.0 - mult2*mult2*0.2;
-	return max(cloud, 0.0);
+	
+	return max(cloud, 0.0); // Ensure non-negative value
 }
-//Erode cloud with 3d Perlin-worley noise, actual cloud value
+
+// Detailed cloud calculation with fractal Brownian motion (FBM) noise
+// Erodes basic cloud shape with 3D noise to create realistic cloud details
 float cloudVol(in vec3 pos,in vec3 samplePos,in float cov, in int LoD){
-	float noise = 0.0;
-	float totalWeights = 0.0;
+	float noise = 0.0; // Initialize noise accumulator
+	float totalWeights = 0.0; // Track total weights for normalization
+	
+	// Pre-calculate logarithms of FBM parameters for efficiency
 	float pw = log(fbmPower1);
 	float pw2 = log(fbmPower2);
+	
+	// Move clouds over time
 	samplePos.xz += frameTimeCounter*9.0;
+	
+	// Apply multiple layers of noise with decreasing influence (FBM)
 	for (int i = 0; i <= LoD; i++){
-	  float	weight = exp(-i*pw2);
-		noise += weight - densityAtPos(samplePos*6.*exp(i*pw))*weight;
-		totalWeights += weight;
+	  float	weight = exp(-i*pw2); // Calculate weight for this octave
+		noise += weight - densityAtPos(samplePos*6.*exp(i*pw))*weight; // Sample noise at different scales
+		totalWeights += weight; // Accumulate weights
 	}
+	
+	// Normalize noise by total weights
 	noise /= totalWeights;
-	noise = noise*noise;
+	noise = noise*noise; // Apply non-linear transformation for more defined edges
+	
+	// Erode basic cloud shape with the detailed noise
+	// Higher rain strength increases erosion effect
 	float cloud = max(cov-noise*noise*(1.1+rainStrength)*fbmAmount,0.0);
-	return cloud;
+	
+	return cloud; // Return final cloud density
 }
+
+// Main function to get cloud density at a given position
 float getCloudDensity(in vec3 pos, in int LoD){
+	// Scale position and apply animation
 	vec3 samplePos = pos*vec3(1.0,1./32.,1.0)/4 + frameTimeCounter*vec3(0.5,0.,0.5)*5.;
+	
+	// First check basic cloud coverage (optimization)
 	float coverageSP = cloudCov(pos,samplePos);
+	
+	// Only proceed with detailed calculation if there's potential cloud
 	if (coverageSP > 0.001) {
 		if (LoD < 0)
 			return max(coverageSP - 0.27*(fbmAmount+rainStrength),0.0);
@@ -105,8 +151,7 @@ float getCloudDensity(in vec3 pos, in int LoD){
 		return 0.0;
 }
 
-
-//Mie phase function
+// Mie phase function
 float phaseg(float x, float g){
     float gg = g * g;
     return (gg * -0.25 /3.14 + 0.25 /3.14) * pow(-2.0 * (g * x) + (gg + 1.0), -1.5);

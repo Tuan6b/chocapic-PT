@@ -1,30 +1,32 @@
 #version 120
 //Render sky, volumetric clouds, direct lighting
-#extension GL_EXT_gpu_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable // Enables advanced GPU shader features for better performance and capabilities
 
 #define CAVE_LIGHT_LEAK_FIX // Hackish way to remove sunlight incorrectly leaking into the caves. Can inacurrately create shadows in some places
 //#define CLOUDS_SHADOWS
-#define CLOUDS_SHADOWS_STRENGTH 1.0 //[0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0]
-#define CLOUDS_QUALITY 0.35 //[0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0]
-#define TORCH_R 1.0 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0]
-#define TORCH_G 0.4 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0]
-#define TORCH_B 0.12 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0]
+#define CLOUDS_SHADOWS_STRENGTH 1.0 //[0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0] // Controls how strong cloud shadows appear on the terrain
+#define CLOUDS_QUALITY 0.35 //[0.1 0.125 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.9 1.0] // Adjusts the visual quality of clouds, higher values look better but impact performance
+#define TORCH_R 1.0 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0] // Red component of torch light color
+#define TORCH_G 0.4 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0] // Green component of torch light color
+#define TORCH_B 0.12 // [0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.2 0.21 0.22 0.23 0.24 0.25 0.26 0.27 0.28 0.29 0.3 0.31 0.32 0.33 0.34 0.35 0.36 0.37 0.38 0.39 0.4 0.41 0.42 0.43 0.44 0.45 0.46 0.47 0.48 0.49 0.5 0.51 0.52 0.53 0.54 0.55 0.56 0.57 0.58 0.59 0.6 0.61 0.62 0.63 0.64 0.65 0.66 0.67 0.68 0.69 0.7 0.71 0.72 0.73 0.74 0.75 0.76 0.77 0.78 0.79 0.8 0.81 0.82 0.83 0.84 0.85 0.86 0.87 0.88 0.89 0.9 0.91 0.92 0.93 0.94 0.95 0.96 0.97 0.98 0.99 1.0] // Blue component of torch light color, makes torches appear warm and orange
 
 
 
-const bool shadowHardwareFiltering = true;
+const bool shadowHardwareFiltering = true; // Enables hardware filtering for shadows to improve appearance and performance
 
+// Varying variables passed from the vertex shader to the fragment shader
 flat varying vec4 lightCol; //main light source color (rgb),used light source(1=sun,-1=moon)
-flat varying vec3 ambientUp;
-flat varying vec3 ambientLeft;
-flat varying vec3 ambientRight;
-flat varying vec3 ambientB;
-flat varying vec3 ambientF;
-flat varying vec3 ambientDown;
-flat varying vec3 WsunVec;
-flat varying vec2 TAA_Offset;
-flat varying float tempOffsets;
+flat varying vec3 ambientUp; // Ambient light from above (sky)
+flat varying vec3 ambientLeft; // Ambient light from the left side
+flat varying vec3 ambientRight; // Ambient light from the right side
+flat varying vec3 ambientB; // Ambient light from behind
+flat varying vec3 ambientF; // Ambient light from front
+flat varying vec3 ambientDown; // Ambient light from below (ground)
+flat varying vec3 WsunVec; // World-space sun vector
+flat varying vec2 TAA_Offset; // Temporal anti-aliasing offset to reduce flickering
+flat varying float tempOffsets; // Temporal offset for various effects
 
+// Texture samplers for accessing different render targets
 uniform sampler2D colortex0;//clouds
 uniform sampler2D colortex1;//albedo(rgb),material(alpha) RGBA16
 uniform sampler2D colortex4;//Skybox
@@ -35,72 +37,90 @@ uniform sampler2D colortex6; // Noise
 uniform sampler2D depthtex1;//depth
 uniform sampler2D depthtex0;//depth
 uniform sampler2D noisetex;//depth
-uniform sampler2DShadow shadow;
+uniform sampler2DShadow shadow; // Shadow map for shadow calculations
 
-uniform int heldBlockLightValue;
-uniform int frameCounter;
-uniform int isEyeInWater;
-uniform float far;
-uniform float near;
-uniform float frameTimeCounter;
-uniform float rainStrength;
-uniform mat4 gbufferProjection;
-uniform mat4 gbufferProjectionInverse;
-uniform mat4 gbufferModelViewInverse;
-uniform mat4 gbufferPreviousModelView;
-uniform mat4 gbufferPreviousProjection;
-uniform vec3 previousCameraPosition;
-uniform mat4 shadowModelView;
-uniform mat4 shadowProjection;
-uniform mat4 gbufferModelView;
-uniform float viewWidth;
-uniform float viewHeight;
-uniform float aspectRatio;
-uniform vec2 texelSize;
-uniform vec3 cameraPosition;
-uniform vec3 sunVec;
-uniform ivec2 eyeBrightnessSmooth;
+// Uniform variables provided by the game/engine
+uniform int heldBlockLightValue; // Light level of block currently held by player
+uniform int frameCounter; // Counter that increments each frame, used for temporal effects
+uniform int isEyeInWater; // 1 if player's camera is underwater, 0 otherwise
+uniform float far; // Far clipping plane distance
+uniform float near; // Near clipping plane distance
+uniform float frameTimeCounter; // Time counter for animations
+uniform float rainStrength; // How heavily it's raining (0.0-1.0)
+uniform mat4 gbufferProjection; // Projection matrix
+uniform mat4 gbufferProjectionInverse; // Inverse of projection matrix
+uniform mat4 gbufferModelViewInverse; // Inverse of model-view matrix
+uniform mat4 gbufferPreviousModelView; // Previous frame's model-view matrix for temporal effects
+uniform mat4 gbufferPreviousProjection; // Previous frame's projection matrix
+uniform vec3 previousCameraPosition; // Camera position in previous frame
+uniform mat4 shadowModelView; // Model-view matrix for shadow calculation
+uniform mat4 shadowProjection; // Projection matrix for shadow calculation
+uniform mat4 gbufferModelView; // Model-view matrix
+uniform float viewWidth; // Screen width in pixels
+uniform float viewHeight; // Screen height in pixels
+uniform float aspectRatio; // Screen aspect ratio
+uniform vec2 texelSize; // Size of one pixel (1/width, 1/height)
+uniform vec3 cameraPosition; // Current camera position
+uniform vec3 sunVec; // Direction vector pointing towards the sun
+uniform ivec2 eyeBrightnessSmooth; // Smooth eye brightness value (x: block, y: sky)
 
+// Helper macro to extract diagonal elements from a matrix
 #define diagonal3(m) vec3((m)[0].x, (m)[1].y, m[2].z)
+// Helper macro for projection matrix multiplication and addition
 #define  projMAD(m, v) (diagonal3(m) * (v) + (m)[3].xyz)
+
+// Converts screen-space coordinates to view-space coordinates
 vec3 toScreenSpace(vec3 p) {
 	vec4 iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
-    vec3 p3 = p * 2. - 1.;
+    vec3 p3 = p * 2. - 1.; // Convert from [0,1] to [-1,1] range
     vec4 fragposition = iProjDiag * p3.xyzz + gbufferProjectionInverse[3];
-    return fragposition.xyz / fragposition.w;
+    return fragposition.xyz / fragposition.w; // Perspective division
 }
+
+// Similar to toScreenSpace but used for previous frame calculations in temporal effects
 vec3 toScreenSpacePrev(vec3 p) {
 	vec4 iProjDiag = vec4(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y, gbufferProjectionInverse[2].zw);
     vec3 p3 = p * 2. - 1.;
     vec4 fragposition = iProjDiag * p3.xyzz + gbufferProjectionInverse[3];
     return fragposition.xyz / fragposition.w;
 }
-#include "lib/res_params.glsl"
-#include "lib/waterOptions.glsl"
-#include "lib/Shadow_Params.glsl"
-#include "lib/color_transforms.glsl"
-#include "lib/sky_gradient.glsl"
-#include "lib/stars.glsl"
-#include "lib/volumetricClouds.glsl"
-#include "lib/waterBump.glsl"
-#include "/lib/ssgi.glsl"
 
+// Include necessary library files for various effects
+#include "lib/res_params.glsl" // Resolution parameters
+#include "lib/waterOptions.glsl" // Water rendering options
+#include "lib/Shadow_Params.glsl" // Shadow parameters and functions
+#include "lib/color_transforms.glsl" // Color space conversion functions
+#include "lib/sky_gradient.glsl" // Sky gradient generation
+#include "lib/stars.glsl" // Star rendering
+#include "lib/volumetricClouds.glsl" // Volumetric cloud generation
+#include "lib/waterBump.glsl" // Water bump mapping
+#include "/lib/ssgi.glsl" // Screen Space Global Illumination
+
+// Normalize a vector (make it unit length)
 vec3 normVec (vec3 vec){
-	return vec*inversesqrt(dot(vec,vec));
+	return vec*inversesqrt(dot(vec,vec)); // Multiply by 1/sqrt(dot(vec,vec)) is faster than dividing by length
 }
+
+// Calculate the length of a vector
 float lengthVec (vec3 vec){
-	return sqrt(dot(vec,vec));
+	return sqrt(dot(vec,vec)); // Length is the square root of the dot product with itself
 }
+
+// Fast sign function
 #define fsign(a)  (clamp((a)*1e35,0.,1.)*2.-1.)
+
+// Creates a triangular distribution from a uniform random value
 float triangularize(float dither)
 {
-    float center = dither*2.0-1.0;
-    dither = center*inversesqrt(abs(center));
-    return clamp(dither-fsign(center),0.0,1.0);
+    float center = dither*2.0-1.0; // Convert from [0,1] to [-1,1]
+    dither = center*inversesqrt(abs(center)); // Transform distribution
+    return clamp(dither-fsign(center),0.0,1.0); // Clamp to [0,1] range
 }
+
 float interleaved_gradientNoise(float temp){
 	return fract(52.9829189*fract(0.06711056*gl_FragCoord.x + 0.00583715*gl_FragCoord.y)+temp);
 }
+
 vec3 fp10Dither(vec3 color,float dither){
 	const vec3 mantissaBits = vec3(6.,6.,5.);
 	vec3 exponent = floor(log2(color));
@@ -113,6 +133,7 @@ float facos(float sx){
     float x = clamp(abs( sx ),0.,1.);
     return sqrt( 1. - x ) * ( -0.16882 * x + 1.56734 );
 }
+
 vec3 decode (vec2 enc)
 {
     vec2 fenc = enc*4-2;
@@ -129,6 +150,7 @@ vec2 decodeVec2(float a){
     const float constant2 = 256. / 255.;
     return fract( a * constant1 ) * constant2 ;
 }
+
 float linZ(float depth) {
     return (2.0 * near) / (far + near - depth * (far - near));
 	// l = (2*n)/(f+n-d(f-n))
@@ -137,6 +159,7 @@ float linZ(float depth) {
 	// d = -((2n/l)-f-n)/(f-n)
 
 }
+
 float invLinZ (float lindepth){
 	return -((2.0*near/lindepth)-far-near)/(far-near);
 }
@@ -212,16 +235,20 @@ vec3 BilateralFiltering(sampler2D tex, sampler2D depth,vec2 coord,float frDepth,
 
   return vec3(sampled.x,sampled.yz/sampled.w);
 }
+
 float blueNoise(){
   return fract(texelFetch2D(noisetex, ivec2(gl_FragCoord.xy)%512, 0).a + 1.0/1.6180339887 * frameCounter);
 }
+
 vec4 blueNoise(vec2 coord){
   return texelFetch2D(colortex6, ivec2(coord)%512, 0);
 }
+
 float R2_dither(){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
 	return fract(alpha.x * gl_FragCoord.x + alpha.y * gl_FragCoord.y);
 }
+
 vec3 toShadowSpaceProjected(vec3 p3){
     p3 = mat3(gbufferModelViewInverse) * p3 + gbufferModelViewInverse[3].xyz;
     p3 = mat3(shadowModelView) * p3 + shadowModelView[3].xyz;
@@ -323,6 +350,7 @@ vec3 RT(vec3 dir,vec3 position,float noise, vec3 N){
 	}
 	return vec3(1.1);
 }
+
 vec2 R2_samples(int n){
 	vec2 alpha = vec2(0.75487765, 0.56984026);
 	return fract(alpha * n);
@@ -338,6 +366,7 @@ vec3 cosineHemisphereSample(vec2 Xi)
 
     return vec3(x, y, sqrt(clamp(1.0 - Xi.x,0.,1.)));
 }
+
 vec3 TangentToWorld(vec3 N, vec3 H)
 {
     vec3 UpVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
